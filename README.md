@@ -1,9 +1,9 @@
 # Garasi-Standaran
 Manajemen Bengkel Standaran
 
-# BengkelPRO — Sistem Manajemen Bengkel
+# Garasi Standaran — Sistem Manajemen Bengkel
 
-> Aplikasi web manajemen bengkel berbasis satu file HTML (`bengkel-pro-v2.html`) yang berjalan sepenuhnya di browser tanpa server, database, atau instalasi tambahan.
+> Aplikasi web manajemen bengkel berbasis satu file HTML yang berjalan sepenuhnya di browser tanpa server, database, atau instalasi tambahan.
 
 ---
 
@@ -28,11 +28,11 @@ Manajemen Bengkel Standaran
 
 ## Gambaran Umum
 
-**BengkelPRO** adalah sistem manajemen bengkel lengkap yang dikemas dalam satu file HTML tunggal. Tidak memerlukan koneksi internet setelah dimuat (kecuali Google Fonts), tidak memerlukan server backend, dan tidak memerlukan database eksternal — semua data tersimpan di `localStorage` browser pengguna.
+**Garasi Standaran** adalah sistem manajemen bengkel lengkap yang dikemas dalam satu file HTML tunggal. Tidak memerlukan koneksi internet setelah dimuat (kecuali Google Fonts), tidak memerlukan server backend, dan tidak memerlukan database eksternal — semua data tersimpan di `localStorage` browser pengguna.
 
 | Atribut         | Detail                                      |
 |-----------------|---------------------------------------------|
-| Nama File       | `bengkel-pro-v2.html`                       |
+| Nama File       | `garasi_standaran.html`                       |
 | Bahasa Antarmuka | Indonesia                                  |
 | Teknologi       | HTML5, CSS3, Vanilla JavaScript (ES6+)      |
 | Penyimpanan     | `localStorage` browser (prefix `bpro_`)    |
@@ -78,7 +78,7 @@ Manajemen Bengkel Standaran
 ## Cara Penggunaan
 
 ### 1. Buka File
-Cukup buka `bengkel-pro-v2.html` langsung di browser modern (Chrome, Firefox, Edge, Safari). Tidak diperlukan server lokal.
+Cukup buka `garasi_standaran.html` langsung di browser modern (Chrome, Firefox, Edge, Safari). Tidak diperlukan server lokal.
 
 ### 2. Login Admin
 Semua operasi **tulis** (tambah, edit, hapus data) memerlukan login admin.
