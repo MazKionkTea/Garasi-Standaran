@@ -922,14 +922,14 @@
   <div class="sb-logo">
     <div class="sb-logo-icon">🔧</div>
     <div class="sb-logo-text">
-      <div class="sb-logo-name">BengkelPRO</div>
+      <div class="sb-logo-name">Garasi Standaran</div>
       <div class="sb-logo-sub">Manajemen Bengkel</div>
     </div>
   </div>
 
   <!-- Info user -->
   <div class="sb-user">
-    <div class="sb-user-avatar">A</div>
+    <div class="sb-user-avatar">K</div>
     <div class="sb-user-info">
       <div class="sb-user-name" id="sb-username">Admin</div>
       <div class="sb-user-role" id="sb-userrole">Administrator</div>
