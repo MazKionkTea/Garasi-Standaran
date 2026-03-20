@@ -3987,6 +3987,7 @@
       alat[idx] = item;
       /* hapus cashflow lama, buat baru */
       S.set('cashflow', S.get('cashflow', []).filter(c => c.refId !== editId));
+      S.set('operasional', S.get('operasional', []).filter(o => o.refId !== editId));
       _catatCashflowInv(item);
       showToast(`"${nama}" berhasil diperbarui`, 'success');
     } else {
