@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BengkelPRO — Sistem Manajemen Bengkel</title>
+  <title>Garasi Standaran — Sistem Manajemen Bengkel</title>
 
   <!-- ============================================================
     FONT: Outfit (UI) + JetBrains Mono (angka/kode)
@@ -931,7 +931,7 @@
   <div class="sb-user">
     <div class="sb-user-avatar">K</div>
     <div class="sb-user-info">
-      <div class="sb-user-name" id="sb-username">Admin</div>
+      <div class="sb-user-name" id="sb-username">Kiong</div>
       <div class="sb-user-role" id="sb-userrole">Administrator</div>
     </div>
   </div>
@@ -1035,7 +1035,7 @@
 
     <!-- breadcrumb -->
     <div class="tb-breadcrumb" id="breadcrumb">
-      <span>BengkelPRO</span>
+      <span>Garasi Standaran</span>
       <span class="bc-sep">›</span>
       <span class="bc-current" id="bc-current">Dashboard</span>
     </div>
@@ -1967,6 +1967,10 @@
           <input class="form-control" id="es-kat" name="es-kat" placeholder="Kategori">
         </div>
         <div class="form-group">
+          <label class="form-label" for="es-hbeli">Harga Beli (Rp)</label>
+          <input class="form-control" type="number" id="es-hbeli" name="es-hbeli" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
           <label class="form-label" for="es-hjual">Harga Jual (Rp)</label>
           <input class="form-control" type="number" id="es-hjual" name="es-hjual" min="0" placeholder="0">
         </div>
@@ -2280,7 +2284,7 @@
     </div>
 
     <!-- hint kredensial default -->
-    <div class="lm-hint">Default: <b>admin</b> / <b>bengkel123</b></div>
+    <div class="lm-hint">Default: <b>Kiong</b> / <b>bengkel123</b></div>
 
   </div>
 </div><!-- /modal-login -->
@@ -2383,8 +2387,8 @@
     /* update breadcrumb */
     const bc = document.getElementById('breadcrumb');
     bc.innerHTML = parent
-      ? `<span>BengkelPRO</span><span class="bc-sep">›</span><span>${parent}</span><span class="bc-sep">›</span><span class="bc-current">${title}</span>`
-      : `<span>BengkelPRO</span><span class="bc-sep">›</span><span class="bc-current">${title}</span>`;
+      ? `<span>Garasi Standaran</span><span class="bc-sep">›</span><span>${parent}</span><span class="bc-sep">›</span><span class="bc-current">${title}</span>`
+      : `<span>Garasi Standaran</span><span class="bc-sep">›</span><span class="bc-current">${title}</span>`;
 
     /* reset highlight semua menu, highlight yang aktif */
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -2433,7 +2437,7 @@
     const pass = document.getElementById('lm-pass').value;
 
     /* kredensial default — akan bisa diubah di pengaturan nanti */
-    const validUser = S.get('admin_user', 'admin');
+    const validUser = S.get('admin_user', 'Kiong');
     const validPass = S.get('admin_pass', 'bengkel123');
 
     if (user === validUser && pass === validPass) {
@@ -2779,8 +2783,10 @@
       masuk[idx] = trx;
 
       /* update stok: kurangi qty lama, tambah qty baru */
-      _updateStok(kode, nama, kat, satuan, hjual, stokMin, ket,
-                  trx.qty - (lama?.qty || 0), isAlat);
+      // _updateStok(kode, nama, kat, satuan, hjual, stokMin, ket,
+      //             trx.qty - (lama?.qty || 0), isAlat);
+      
+      _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, trx.qty - (lama?.qty||0), isAlat);
 
       /* update cashflow: hapus entri lama, buat entri baru */
       _hapusCashflowDariMasuk(editId);
@@ -2792,7 +2798,8 @@
       masuk.push(trx);
 
       /* tambah stok item baru atau yang sudah ada */
-      _updateStok(kode, nama, kat, satuan, hjual, stokMin, ket, qty, isAlat);
+      // _updateStok(kode, nama, kat, satuan, hjual, stokMin, ket, qty, isAlat);
+      _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, qty, isAlat);
 
       /* catat ke cashflow — nilai beli + ongkir keduanya masuk sebagai pengeluaran kas */
       _catatCashflow(trx);
@@ -2812,7 +2819,7 @@
     selisihQty = qty yang ditambahkan (positif) atau dikurangi (negatif)
     isAlat     = true jika masuk ke Alat Kerja
   ============================================================ */
-  function _updateStok(kode, nama, kat, satuan, hjual, stokMin, ket, selisihQty, isAlat) {
+  function _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, qty, isAlat) {
     const key  = isAlat ? 'alat' : 'stok';          /* pilih tabel yang sesuai */
     const data = S.get(key, []);
     const idx  = data.findIndex(b => b.kode === kode);
@@ -2822,12 +2829,14 @@
       data[idx].stok    += selisihQty;
       data[idx].stokMin  = stokMin;   /* selalu update nilai minimum */
       data[idx].hjual    = hjual || data[idx].hjual;
+      data[idx].hbeli    = hbeli || data[idx].hbeli;
     } else {
       /* barang baru — daftarkan ke tabel */
       data.push({
         id: uid(), kode, nama, kat, satuan,
         stok: selisihQty,
         stokMin,
+        hbeli,
         hjual,
         ket,
       });
@@ -2961,7 +2970,7 @@
     }
 
     /* update footer */
-    const nilaiTotal = filtered.reduce((a, b) => a + b.stok * (b.hjual || 0), 0);
+    const nilaiTotal = filtered.reduce((a, b) => a + b.stok * (b.hbeli || 0), 0);
     const el = document.getElementById('stok-count');
     if (el) el.textContent = `${filtered.length} jenis barang`;
     const el2 = document.getElementById('stok-nilai');
@@ -3282,6 +3291,7 @@
     document.getElementById('hapus-msg').innerHTML =
       `Transaksi <b>"${nama}"</b> akan dihapus permanen.<br>
        Stok, cashflow, dan data terkait juga akan disesuaikan.`;
+    document.getElementById('modal-hapus').dataset.mode = 'masuk';
     document.getElementById('modal-hapus').classList.add('open');
   }
 
@@ -3429,7 +3439,8 @@
     } else {
       keluar.push(trx);
       /* kurangi stok */
-      _updateStok(kode, nama, kat, satuan, hjual, itemStok?.stokMin || 5, ket, -qty, false);
+      // _updateStok(kode, nama, kat, satuan, hjual, itemStok?.stokMin || 5, ket, -qty, false);
+      _updateStok(kode, nama, kat, satuan, itemStok?.hbeli||0, hjual, itemStok?.stokMin||5, ket, lama.qty - trx.qty, false)
       /* catat pemasukan ke cashflow */
       _catatCashflowKeluar(trx);
       showToast(`Barang "${nama}" keluar (${qty} ${satuan})`, 'success');
@@ -3903,6 +3914,7 @@
     document.getElementById('es-nama').value    = b.nama;
     document.getElementById('es-kat').value     = b.kat;
     document.getElementById('es-satuan').value  = b.satuan;
+    document.getElementById('es-hbeli').value   = b.hbeli || '';
     document.getElementById('es-hjual').value   = b.hjual || '';
     document.getElementById('es-stokmin').value = b.stokMin || 5;
     document.getElementById('es-ket').value     = b.ket || '';
@@ -4039,6 +4051,7 @@
     const nama   = document.getElementById('es-nama').value.trim();
     const kat    = document.getElementById('es-kat').value.trim();
     const satuan = document.getElementById('es-satuan').value;
+    const hbeli  = parseInt(document.getElementById('es-hbeli').value) || 0;
     const hjual  = parseInt(document.getElementById('es-hjual').value) || 0;
     const stokMin = parseInt(document.getElementById('es-stokmin').value) || 5;
     const ket    = document.getElementById('es-ket').value.trim();
@@ -4051,7 +4064,8 @@
     if (idx < 0) return;
 
     /* update hanya field yang bisa diedit — stok dan kode tidak berubah */
-    data[idx] = { ...data[idx], nama, kat, satuan, hjual, stokMin, ket };
+    // data[idx] = { ...data[idx], nama, kat, satuan, hjual, stokMin, ket };
+    data[idx] = { ...data[idx], nama, kat, satuan, hbeli, hjual, stokMin, ket };
     S.set(tipe, data);
 
     tutupEditStok();
