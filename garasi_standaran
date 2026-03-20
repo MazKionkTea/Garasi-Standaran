@@ -814,6 +814,11 @@
       outline: none;
     }
     .form-control::placeholder { color: var(--text3); }
+    textarea.form-control {
+      resize: vertical;
+      min-height: 72px;
+      line-height: 1.5;
+    }
     select.form-control { cursor: pointer; }
     select.form-control option { background: var(--bg2); }
     .form-hint { font-size: 10px; color: var(--text3); margin-top: 2px; }
@@ -2212,9 +2217,15 @@
         </div>
 
         <!-- Keterangan — kolom penuh -->
-        <div class="form-group form-full">
+        <!-- <div class="form-group form-full">
           <label class="form-label" for="fm-ket">Keterangan</label>
           <input class="form-control" id="fm-ket" name="fm-ket" placeholder="Cth: Cocok untuk Honda Beat, Scoopy">
+        </div> -->
+
+        <!-- Keterangan — kolom penuh -->
+        <div class="form-group form-full">
+          <label class="form-label" for="fm-ket">Keterangan</label>
+          <textarea class="form-control" id="fm-ket" name="fm-ket" rows="3" placeholder="Cth: Cocok untuk Honda Beat, Scoopy&#10;Bisa untuk tipe lain: Vario, BeAT FI&#10;Catatan stok: pesan ulang tiap bulan"></textarea>
         </div>
 
         <!-- Info alur data -->
@@ -2524,9 +2535,18 @@
     KATEGORI DINAMIS — ambil semua kategori unik dari data masuk
     Dipakai untuk autocomplete dan filter dropdown
   ============================================================ */
+  // function getKategori() {
+  //   const masuk = S.get('masuk', []);
+  //   const set   = new Set(masuk.map(m => m.kat).filter(Boolean));
+  //   return [...set].sort();
+  // }
+
   function getKategori() {
     const masuk = S.get('masuk', []);
-    const set   = new Set(masuk.map(m => m.kat).filter(Boolean));
+    const stok  = S.get('stok',  []);
+    const alat  = S.get('alat',  []);
+    const semua = [...masuk, ...stok, ...alat];
+    const set   = new Set(semua.map(b => b.kat).filter(Boolean));
     return [...set].sort();
   }
 
@@ -2816,7 +2836,7 @@
   /* ============================================================
     _updateStok — tambah/kurangi stok di modul Stok Barang atau Alat Kerja
     kode, nama, kat, satuan, hjual, stokMin, ket = info barang
-    selisihQty = qty yang ditambahkan (positif) atau dikurangi (negatif)
+    Qty = qty yang ditambahkan (positif) atau dikurangi (negatif)
     isAlat     = true jika masuk ke Alat Kerja
   ============================================================ */
   function _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, qty, isAlat) {
@@ -2826,7 +2846,7 @@
 
     if (idx >= 0) {
       /* barang sudah ada — tambah stok */
-      data[idx].stok    += selisihQty;
+      data[idx].stok    += Qty;
       data[idx].stokMin  = stokMin;   /* selalu update nilai minimum */
       data[idx].hjual    = hjual || data[idx].hjual;
       data[idx].hbeli    = hbeli || data[idx].hbeli;
@@ -2834,7 +2854,7 @@
       /* barang baru — daftarkan ke tabel */
       data.push({
         id: uid(), kode, nama, kat, satuan,
-        stok: selisihQty,
+        stok: Qty,
         stokMin,
         hbeli,
         hjual,
@@ -3430,8 +3450,7 @@
       const lama = keluar[idx];
       keluar[idx] = trx;
       /* kembalikan qty lama ke stok, kurangi qty baru */
-      _updateStok(kode, nama, kat, satuan, hjual, itemStok?.stokMin || 5, ket,
-                  lama.qty - trx.qty, false);
+      _updateStok(kode, nama, kat, satuan, hjual, itemStok?.stokMin || 5, ket, lama.qty - trx.qty, false);
       /* update cashflow */
       _hapusCashflowDariKeluar(editId);
       _catatCashflowKeluar(trx);
@@ -3440,7 +3459,7 @@
       keluar.push(trx);
       /* kurangi stok */
       // _updateStok(kode, nama, kat, satuan, hjual, itemStok?.stokMin || 5, ket, -qty, false);
-      _updateStok(kode, nama, kat, satuan, itemStok?.hbeli||0, hjual, itemStok?.stokMin||5, ket, lama.qty - trx.qty, false)
+      _updateStok(kode, nama, kat, satuan, itemStok?.hbeli||0, hjual, itemStok?.stokMin||5, ket, -qty, false)
       /* catat pemasukan ke cashflow */
       _catatCashflowKeluar(trx);
       showToast(`Barang "${nama}" keluar (${qty} ${satuan})`, 'success');
@@ -3853,7 +3872,7 @@
     const target = masuk.find(m => m.id === hapusTargetId);
     if (!target) { tutupModalHapus(); return; }
     _updateStok(target.kode, target.nama, target.kat, target.satuan,
-                target.hjual, target.stokMin, target.ket, -target.qty, target.isAlat);
+            target.hbeli, target.hjual, target.stokMin, target.ket, -target.qty, target.isAlat);
     _hapusCashflowDariMasuk(hapusTargetId);
     S.set('masuk', masuk.filter(m => m.id !== hapusTargetId));
     if (selectedMasukId === hapusTargetId) {
@@ -3874,7 +3893,7 @@
     /* kembalikan stok */
     const itemStok = S.get('stok', []).find(b => b.kode === target.kode);
     _updateStok(target.kode, target.nama, target.kat, target.satuan,
-                target.hjual, itemStok?.stokMin || 5, target.ket, target.qty, false);
+                itemStok?.hbeli||0, target.hjual, itemStok?.stokMin || 5, target.ket, target.qty, false);
     _hapusCashflowDariKeluar(hapusTargetId);
     S.set('keluar', keluar.filter(k => k.id !== hapusTargetId));
     if (selectedKeluarId === hapusTargetId) {
