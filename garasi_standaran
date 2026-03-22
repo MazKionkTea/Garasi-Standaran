@@ -1471,7 +1471,7 @@
                   <div class="detail-row"><label>Harga Beli</label><p class="mono" id="ds-hbeli"></p></div>
                   <div class="detail-row"><label>Harga Jual</label><p class="mono" id="ds-hjual" style="color:var(--accent);font-weight:600"></p></div>
                 </div>
-                <div class="detail-row"><label>Nilai Stok</label><p class="mono" id="ds-nilai" style="font-weight:600"></p></div>
+                <div class="detail-row"><label>Nilai Jual Stok</label><p class="mono" id="ds-nilai" style="font-weight:600"></p></div>
                 <div class="detail-row"><label>Keterangan</label><p id="ds-ket" style="font-size:11px"></p></div>
               </div>
             </div>
@@ -2789,7 +2789,6 @@
       tgl, kode, nama, kat, satuan, qty, hbeli, hjual, stokMin,
       supplier, ongkir, ket,
       total,            /* qty × harga beli */
-      isAlat,           /* true jika kategori Alat Kerja */
     };
 
     /* ══ SIMPAN KE localStorage ══ */
@@ -2806,7 +2805,7 @@
       // _updateStok(kode, nama, kat, satuan, hjual, stokMin, ket,
       //             trx.qty - (lama?.qty || 0), isAlat);
       
-      _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, trx.qty - (lama?.qty||0), isAlat);
+      _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, trx.qty - (lama?.qty||0));
 
       /* update cashflow: hapus entri lama, buat entri baru */
       _hapusCashflowDariMasuk(editId);
@@ -2819,7 +2818,7 @@
 
       /* tambah stok item baru atau yang sudah ada */
       // _updateStok(kode, nama, kat, satuan, hjual, stokMin, ket, qty, isAlat);
-      _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, qty, isAlat);
+      _updateStok(kode, nama, kat, satuan, hbeli, hjual, stokMin, ket, qty);
 
       /* catat ke cashflow — nilai beli + ongkir keduanya masuk sebagai pengeluaran kas */
       _catatCashflow(trx);
@@ -2846,7 +2845,7 @@
 
     if (idx >= 0) {
       /* barang sudah ada — tambah stok */
-      data[idx].stok    += Qty;
+      data[idx].stok    += qty;
       data[idx].stokMin  = stokMin;   /* selalu update nilai minimum */
       data[idx].hjual    = hjual || data[idx].hjual;
       data[idx].hbeli    = hbeli || data[idx].hbeli;
@@ -2854,7 +2853,7 @@
       /* barang baru — daftarkan ke tabel */
       data.push({
         id: uid(), kode, nama, kat, satuan,
-        stok: Qty,
+        stok: qty,
         stokMin,
         hbeli,
         hjual,
@@ -3450,7 +3449,7 @@
       const lama = keluar[idx];
       keluar[idx] = trx;
       /* kembalikan qty lama ke stok, kurangi qty baru */
-      _updateStok(kode, nama, kat, satuan, hjual, itemStok?.stokMin || 5, ket, lama.qty - trx.qty, false);
+      _updateStok(kode, nama, kat, satuan, itemStok?.hbeli||0, hjual, itemStok?.stokMin||5, ket, lama.qty - trx.qty, false);
       /* update cashflow */
       _hapusCashflowDariKeluar(editId);
       _catatCashflowKeluar(trx);
@@ -3871,6 +3870,14 @@
     const masuk  = S.get('masuk', []);
     const target = masuk.find(m => m.id === hapusTargetId);
     if (!target) { tutupModalHapus(); return; }
+
+    /* cek stok cukup sebelum mengurangi */
+    const itemStok = S.get('stok', []).find(b => b.kode === target.kode);
+    if (itemStok && itemStok.stok < target.qty) {
+      showToast('Tidak bisa dihapus — sebagian stok sudah terpakai. Hapus transaksi keluar terkait dulu.', 'error');
+      tutupModalHapus();
+      return;
+    }
     _updateStok(target.kode, target.nama, target.kat, target.satuan,
             target.hbeli, target.hjual, target.stokMin, target.ket, -target.qty, target.isAlat);
     _hapusCashflowDariMasuk(hapusTargetId);
@@ -4139,7 +4146,7 @@
     const totalItem   = semuaItem.length;
     const menipis     = stok.filter(b => b.stok > 0 && b.stok <= b.stokMin).length;
     const habis       = stok.filter(b => b.stok <= 0).length;
-    const nilaiStok   = stok.reduce((a, b) => a + (b.stok * (b.hjual || 0)), 0);
+    const nilaiStok   = stok.reduce((a, b) => a + (b.stok * (b.hbeli || 0)), 0);
     const aktivitas   = masuk.filter(m => m.tgl === today).length
                       + keluar.filter(k => k.tgl === today).length;
     const alertCount  = menipis + habis;
